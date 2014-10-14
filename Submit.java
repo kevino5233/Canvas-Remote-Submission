@@ -4,16 +4,13 @@ import java.io.*;
 public class Submit{
     public static void main(String[] args)throws IOException{
 	//arbitrary?
-	int client_id = 111;
-	String response_type = "code";
-	String redirect_uri = "./";
-	String state = "CRS";
-	String query = String.format("client_id=%d&response_type=%s&redirect_uri=%s&state=%s",
-	    client_id,
-	    response_type,
-	    redirect_uri,
-	    state);
-	URL authRequest = new URL("https://utexas.instructure.com/login/oauth2/auth?" + query);
+	BufferedReader oauthKeyFile = new BufferedReader(new FileReader("oauth.txt"));
+	String oauthKey = oauthKeyFile.readLine();
+	System.out.println(oauthKey);
+	
+	//changed to use oauth key. remove this stuff and replace with the post methods described on Canvas's API
+	
+	URL authRequest = new URL("https://utexas.instructure.com/login/oauth2/auth?");
 	System.out.println(authRequest);
 	URLConnection authRequestConnection = authRequest.openConnection();
 	InputStream authRequestResponse = authRequestConnection.getInputStream();
