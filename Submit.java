@@ -9,10 +9,8 @@ public class Submit{
 	//arbitrary?
 	BufferedReader oauthKeyFile = new BufferedReader(new FileReader("oauth.txt"));
 	String oauthKey = oauthKeyFile.readLine();
-
 	Scanner in = new Scanner(System.in);	
 	//changed to use oauth key. remove this stuff and replace with the post methods described on Canvas's API
-	
 	JSONArray courseJSON = new JSONArray(httpGet(new URL("https://canvas.instructure.com/api/v1/courses?access_token=" + oauthKey)));
 	System.out.println("Courses you are enrolled in");
 	for (int i = 0; i < courseJSON.length(); i++){
@@ -29,6 +27,24 @@ public class Submit{
 	}
 	System.out.print("Enter the assignment ID you want to submit for: ");
 	String assignmentID = in.next();
+	System.out.print("Enter the directory that contains your filesi: ");
+	File dir = new File(in.next());
+	while (!dir.isDirectory()){
+	    System.out.println("The path you entered is not a directory: ");
+	    dir = new File(in.next());
+	}
+	//make into a method for epic recursion?
+	for (File fileName : dir.listFiles()){
+	    if (!fileName.isDirectory()){
+		System.out.println("Do you want to upload " + fileName " ? [Y/N]");
+		String response = in.next();
+		if (response.toUpperCase(response).equals("Y")){
+		    //code for posting file;
+		}
+	    }
+	}
+	//http post method to post assignment
+	System.out.println("Done");
     }
 
     public static String httpGet(URL authRequest) throws IOException{
