@@ -1,5 +1,6 @@
 import org.json.*;
 
+import java.lang.*;
 import java.util.*;
 import java.net.*;
 import java.io.*;
@@ -34,12 +35,23 @@ public class Submit{
 	    dir = new File(in.next());
 	}
 	//make into a method for epic recursion?
-	for (File fileName : dir.listFiles()){
-	    if (!fileName.isDirectory()){
-		System.out.println("Do you want to upload " + fileName " ? [Y/N]");
+	for (File file : dir.listFiles()){
+	    if (!file.isDirectory()){
+		System.out.println("Do you want to upload " + file.getName() + " ? [Y/N]");
 		String response = in.next();
-		if (response.toUpperCase(response).equals("Y")){
-		    //code for posting file;
+		if (response.toUpperCase().equals("Y")){
+		    String postResponseRawJSON = httpPost(new URL("https://utexas.instructure.com/api/v1/courses/" + courseID + "/assignments/" + assignmentID + "/submissions/self/files?access_token=" + oauthKey), "name=" + file.getName());
+		    JSONObject postResponseJSON = new JSONObject(postResponseRawJSON);
+		    System.out.println(postResponseJSON);
+		    JSONObject uploadParams = postResponseJSON.getJSONObject("upload_params");
+		    String uploadQuery = "";
+		    for (String field : JSONObject.getNames(uploadParams)){
+			uploadQuery += URLEncoder.encode(field + "=" + uploadParams.get(field) + "&", "UTF-8");
+		    }
+		    uploadQuery += URLEncoder.encode("file=@" + file.getAbsolutePath(), "UTF-8");
+		    URL uploadURL = new URL(postResponseJSON.getString("upload_url"));
+		    String uploadResponseRawJSON = httpPost(uploadURL, uploadQuery);
+		    System.out.println(uploadResponseRawJSON);
 		}
 	    }
 	}
@@ -57,5 +69,37 @@ public class Submit{
 	   inputByte = authRequestResponse.read();
 	}
 	return rawJSON;
+    }
+
+    public static String httpPost(URL postURL, String query) throws IOException{
+	String postResponseRawJSON = "";
+	URLConnection postConnection = postURL.openConnection();
+	try{
+	    postConnection.setDoOutput(true);
+	    OutputStream output = postConnection.getOutputStream();
+	    String shit = URLEncoder.encode(query, "UTF-8");
+	    System.out.println(shit);
+	    output.write(shit.getBytes("UTF-8"));
+	    InputStream postResponse = postConnection.getInputStream();
+	    int inputByte = postResponse.read();
+	    while (inputByte != -1){
+		postResponseRawJSON += (char)inputByte;
+		inputByte = postResponse.read();
+	    }
+	} catch (IOException e){
+	    System.out.println("Error getting stream");
+	    InputStream errorStream = ((HttpURLConnection)postConnection).getErrorStream();
+	    String errorStreamRaw = "";
+	    int inputByte = errorStream.read();
+	    while (inputByte != -1){
+		errorStreamRaw += (char)inputByte;
+		inputByte = errorStream.read();
+	    }
+	    System.out.println(errorStreamRaw);
+	} catch (Exception e){
+	    System.out.println("Some unknown error");
+	    e.printStackTrace();
+	}
+	return postResponseRawJSON;
     }
 }
